@@ -1,0 +1,631 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotizador Rápido | Servicio Automotriz AutoElit</title>
+    <meta name="description" content="Cotiza en segundos afinación, frenos, clutch, diagnóstico, suspensión y llantas en Servicio Automotriz AutoElit.">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#0f172a',
+                            card: '#1e293b',
+                            accent: '#3b82f6',
+                            hover: '#2563eb'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased">
+
+    <!-- Header / Navbar -->
+    <header class="bg-brand-dark border-b border-slate-800 py-4 px-4 sm:px-6 shadow-md">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div class="flex items-center space-x-3">
+                <div class="bg-brand-accent p-2 rounded-xl text-white font-bold text-xl tracking-wider">
+                    AE
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight">Servicio Automotriz AutoElit</h1>
+                    <p class="text-xs text-slate-400">autoelit.com — Cotizador Automático de Servicios</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center justify-center gap-2">
+                <span class="text-xs sm:text-sm bg-slate-900 border border-slate-700 px-3 py-1.5 rounded-full text-slate-300">
+                    Folio <strong id="folio" class="font-mono text-slate-100">—</strong>
+                </span>
+                <button id="resetBtn" type="button"
+                    class="text-xs sm:text-sm font-medium bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 rounded-full transition">
+                    Nueva cotización
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-6xl mx-auto px-4 py-8 pb-28 lg:pb-8 w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        <!-- Columna Izquierda -->
+        <section class="lg:col-span-2 space-y-6">
+
+            <!-- 1. Servicios -->
+            <div class="bg-brand-card border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl">
+                <div class="flex items-baseline justify-between gap-3 mb-4">
+                    <h2 class="text-lg font-semibold text-brand-accent">1. Selecciona los servicios requeridos</h2>
+                    <span class="text-xs text-slate-400 hidden sm:inline">Puedes elegir varios</span>
+                </div>
+
+                <div id="servicesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+                <p id="servicesError" class="hidden text-sm text-red-400 mt-3" aria-live="polite"></p>
+
+                <!-- Panel dinámico: Otro / Falla compleja -->
+                <div id="otherPanel" class="hidden mt-5 rounded-xl border border-amber-500/40 bg-amber-500/10 p-5 space-y-4">
+                    <div>
+                        <h3 class="font-semibold text-amber-300">Detalles de la falla compleja</h3>
+                        <p class="text-sm text-amber-200/80">El taller revisará la información y te enviará el precio.</p>
+                    </div>
+                    <div>
+                        <label for="otherDesc" class="block text-xs text-slate-300 mb-1">Describe la falla o requerimiento específico *</label>
+                        <textarea id="otherDesc" rows="3" maxlength="500" aria-describedby="otherDescError"
+                            placeholder="Ej. El motor vibra al acelerar en tercera velocidad..."
+                            class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"></textarea>
+                        <p id="otherDescError" class="hidden text-sm text-red-400 mt-1" aria-live="polite"></p>
+                    </div>
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div>
+                            <label for="engineType" class="block text-xs text-slate-300 mb-1">Tipo de motor / configuración</label>
+                            <select id="engineType"
+                                class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"></select>
+                        </div>
+                        <div>
+                            <label for="severity" class="block text-xs text-slate-300 mb-1">Gravedad de la falla</label>
+                            <select id="severity"
+                                class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Datos del cliente -->
+            <form id="clientForm" novalidate class="bg-brand-card border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+                <h2 class="text-lg font-semibold text-brand-accent">2. Datos del cliente y vehículo</h2>
+
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label for="clientName" class="block text-xs text-slate-400 mb-1">Nombre del cliente *</label>
+                        <input id="clientName" type="text" autocomplete="name" placeholder="Ej. Carlos Garza" aria-describedby="nameError"
+                            class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent">
+                        <p id="nameError" class="hidden text-sm text-red-400 mt-1" aria-live="polite"></p>
+                    </div>
+                    <div>
+                        <label for="clientPhone" class="block text-xs text-slate-400 mb-1">Teléfono / WhatsApp (10 dígitos) *</label>
+                        <input id="clientPhone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="Ej. 81 0000 0000" aria-describedby="phoneError"
+                            class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent">
+                        <p id="phoneError" class="hidden text-sm text-red-400 mt-1" aria-live="polite"></p>
+                    </div>
+                    <div>
+                        <label for="vehicleModel" class="block text-xs text-slate-400 mb-1">Marca y modelo *</label>
+                        <input id="vehicleModel" type="text" placeholder="Ej. Nissan Versa" aria-describedby="modelError"
+                            class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent">
+                        <p id="modelError" class="hidden text-sm text-red-400 mt-1" aria-live="polite"></p>
+                    </div>
+                    <div>
+                        <label for="vehicleYear" class="block text-xs text-slate-400 mb-1">Año *</label>
+                        <select id="vehicleYear" aria-describedby="yearError"
+                            class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-100 focus:outline-none focus:border-brand-accent focus:ring-1 focus:ring-brand-accent"></select>
+                        <p id="yearError" class="hidden text-sm text-red-400 mt-1" aria-live="polite"></p>
+                    </div>
+                </div>
+
+                <!-- Botón para pantallas sin panel lateral -->
+                <button type="submit"
+                    class="lg:hidden w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-3.5 px-4 rounded-xl transition shadow-lg">
+                    📲 Enviar cotización por WhatsApp
+                </button>
+            </form>
+        </section>
+
+        <!-- Columna Derecha / Resumen -->
+        <aside id="summary" class="lg:sticky lg:top-6 h-fit bg-brand-card border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-brand-accent">Resumen de cotización</h2>
+                <span id="countBadge" class="text-xs font-semibold bg-brand-accent/15 text-blue-300 rounded-full px-2.5 py-1">0 servicios</span>
+            </div>
+
+            <ul id="summaryList" class="text-sm divide-y divide-slate-800"></ul>
+
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+                <div class="flex justify-between items-center gap-3">
+                    <span class="font-medium text-slate-300">Total estimado</span>
+                    <span id="sumTotal" class="text-2xl font-bold text-brand-accent" aria-live="polite">$0.00</span>
+                </div>
+                <p id="taxNote" class="text-xs text-slate-500 mt-1 text-right"></p>
+                <p id="pendingNote" class="hidden text-xs text-amber-300 mt-1 text-right">+ falla compleja por cotizar</p>
+            </div>
+
+            <p class="text-[11px] text-slate-400 italic">
+                * Nota: El precio final está sujeto a revisión física y diagnóstico del vehículo en el taller AutoElit.
+            </p>
+
+            <button form="clientForm" type="submit"
+                class="hidden lg:flex w-full bg-emerald-600 hover:bg-emerald-500 active:scale-[.99] text-white font-medium py-3.5 px-4 rounded-xl transition shadow-lg items-center justify-center gap-2">
+                📲 Enviar cotización por WhatsApp
+            </button>
+        </aside>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-brand-dark border-t border-slate-800 py-4 pb-24 lg:pb-4 text-center text-xs text-slate-500">
+        &copy; 2026 Servicio Automotriz AutoElit (autoelit.com). Todos los derechos reservados.
+    </footer>
+
+    <!-- Barra inferior fija en tablet / móvil -->
+    <div class="lg:hidden fixed bottom-0 inset-x-0 bg-slate-900/95 backdrop-blur border-t border-slate-800 shadow-2xl">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+            <div>
+                <p class="text-xs text-slate-400">Total estimado</p>
+                <p id="barTotal" class="text-xl font-bold text-white">$0.00</p>
+            </div>
+            <a href="#summary" class="text-sm font-semibold text-white bg-brand-accent hover:bg-brand-hover rounded-lg px-4 py-2.5">Ver resumen</a>
+        </div>
+    </div>
+
+    <!-- Script de Lógica Interactiva -->
+    <script>
+        /* ------------------------------------------------------------------
+           1. CONFIGURACIÓN GENERAL
+        ------------------------------------------------------------------ */
+        const CONFIG = {
+            businessName: "AutoElit",
+            whatsappNumber: "528115774422", // WhatsApp del taller AutoElit: +52 81 1577 4422
+            pricesIncludeTax: true,          // Los precios del catálogo ya incluyen IVA
+            currency: "MXN",
+            locale: "es-MX",
+            oldestYear: 1980
+        };
+
+        /* ------------------------------------------------------------------
+           2. CATÁLOGO DE SERVICIOS
+           mode: "single" = una opción (radio) | "multi" = varias (checkbox)
+        ------------------------------------------------------------------ */
+        const SERVICES = [
+            {
+                id: "afinacion", icon: "🔧", name: "Afinación",
+                desc: "Aceite, bujías y filtros.",
+                mode: "single",
+                options: [
+                    { id: "menor", label: "Menor", price: 1200 },
+                    { id: "mayor", label: "Mayor", price: 2800 }
+                ]
+            },
+            {
+                id: "frenos", icon: "🛑", name: "Cambio de balatas de freno",
+                desc: "Precio por eje.",
+                mode: "single",
+                options: [
+                    { id: "delantero", label: "Eje delantero", price: 950 },
+                    { id: "trasero", label: "Eje trasero", price: 950 },
+                    { id: "ambos", label: "Ambos ejes", price: 1900 }
+                ]
+            },
+            {
+                id: "diagnostico", icon: "💻", name: "Diagnóstico computarizado",
+                desc: "Lectura de códigos con escáner.",
+                mode: "single",
+                options: [{ id: "escaner", label: "Escáner automotriz", price: 500 }]
+            },
+            {
+                id: "suspension", icon: "🚗", name: "Suspensión y amortiguadores",
+                desc: "Mano de obra desde.",
+                mode: "single",
+                options: [{ id: "mano-obra", label: "Mano de obra", price: 1500 }]
+            },
+            {
+                id: "llantas", icon: "🛞", name: "Servicio de llantas",
+                desc: "Elige uno o varios.",
+                mode: "multi",
+                options: [
+                    { id: "alineacion-balanceo", label: "Alineación y balanceo", price: 450 },
+                    { id: "rotacion", label: "Rotación", price: 250 }
+                ]
+            },
+            {
+                id: "clutch", icon: "⚙️", name: "Kit de embrague / clutch",
+                desc: "Mano de obra desde.",
+                mode: "single",
+                options: [{ id: "mano-obra", label: "Mano de obra", price: 2200 }]
+            }
+        ];
+
+        const OTHER = {
+            id: "otro", icon: "🧰", name: "Otro servicio / falla compleja",
+            desc: "Descríbenos la falla y la cotizamos en el taller."
+        };
+
+        const ENGINE_TYPES = ["4 cilindros", "6 cilindros", "8 cilindros (V8)", "Diésel", "Híbrido", "No lo sé / Otro"];
+        const SEVERITY = [
+            "Leve: el auto funciona normal",
+            "Moderada: falla intermitente",
+            "Grave: no arranca o no es seguro manejarlo",
+            "No lo sé"
+        ];
+
+        /* ------------------------------------------------------------------
+           3. ESTADO
+        ------------------------------------------------------------------ */
+        const state = {
+            selection: new Map(), // serviceId -> Set(optionIds)
+            other: false,
+            folio: ""
+        };
+
+        /* ------------------------------------------------------------------
+           4. REFERENCIAS AL DOM Y UTILIDADES
+        ------------------------------------------------------------------ */
+        const $ = (id) => document.getElementById(id);
+        const dom = {
+            grid: $("servicesGrid"),
+            servicesError: $("servicesError"),
+            otherPanel: $("otherPanel"),
+            otherDesc: $("otherDesc"),
+            otherDescError: $("otherDescError"),
+            engineType: $("engineType"),
+            severity: $("severity"),
+            form: $("clientForm"),
+            name: $("clientName"),
+            phone: $("clientPhone"),
+            model: $("vehicleModel"),
+            year: $("vehicleYear"),
+            nameError: $("nameError"),
+            phoneError: $("phoneError"),
+            modelError: $("modelError"),
+            yearError: $("yearError"),
+            summaryList: $("summaryList"),
+            countBadge: $("countBadge"),
+            sumTotal: $("sumTotal"),
+            barTotal: $("barTotal"),
+            taxNote: $("taxNote"),
+            pendingNote: $("pendingNote"),
+            folio: $("folio"),
+            resetBtn: $("resetBtn")
+        };
+
+        const money = new Intl.NumberFormat(CONFIG.locale, { style: "currency", currency: CONFIG.currency });
+        const getService = (id) => SERVICES.find((s) => s.id === id);
+        const minPrice = (s) => Math.min(...s.options.map((o) => o.price));
+
+        function newFolio() {
+            const d = new Date();
+            const ymd = `${String(d.getFullYear()).slice(2)}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+            return `AE-${ymd}-${Math.floor(1000 + Math.random() * 9000)}`;
+        }
+
+        /* ------------------------------------------------------------------
+           5. INICIALIZACIÓN
+        ------------------------------------------------------------------ */
+        function cardHTML(s) {
+            const type = s.mode === "multi" ? "checkbox" : "radio";
+            const chips = (s.options || []).map((o) => `
+                <label class="cursor-pointer">
+                    <input type="${type}" name="opt-${s.id}" value="${o.id}" data-svc="${s.id}" class="opt-input peer sr-only" />
+                    <span class="inline-block rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-200 transition
+                                 peer-checked:border-brand-accent peer-checked:bg-brand-accent peer-checked:text-white
+                                 peer-focus-visible:ring-2 peer-focus-visible:ring-blue-400 hover:border-brand-accent">
+                        ${o.label} · ${money.format(o.price)}
+                    </span>
+                </label>`).join("");
+
+            return `
+                <article data-card="${s.id}" class="rounded-xl border border-slate-700 bg-slate-900/50 hover:border-brand-accent p-4 transition">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" value="${s.id}" class="svc-check mt-1 h-4 w-4 shrink-0 accent-blue-500" />
+                        <span class="h-10 w-10 shrink-0 rounded-lg bg-slate-800 grid place-items-center text-xl" aria-hidden="true">${s.icon}</span>
+                        <span class="min-w-0">
+                            <span class="block font-medium text-sm">${s.name}</span>
+                            <span class="block text-xs text-slate-400">${s.desc}</span>
+                            <span class="block text-xs font-medium text-blue-300 mt-1">${s.options ? `Desde ${money.format(minPrice(s))} MXN` : "Precio por cotizar"}</span>
+                        </span>
+                    </label>
+                    ${s.options ? `
+                        <div class="svc-options hidden mt-4 pt-4 border-t border-slate-800">
+                            <p class="text-xs text-slate-400 mb-2">${s.mode === "multi" ? "Elige uno o varios:" : "Elige una opción:"}</p>
+                            <div class="flex flex-wrap gap-2">${chips}</div>
+                        </div>` : ""}
+                </article>`;
+        }
+
+        function initControls() {
+            dom.grid.innerHTML = [...SERVICES, OTHER].map(cardHTML).join("");
+
+            dom.engineType.innerHTML = ENGINE_TYPES.map((e) => `<option>${e}</option>`).join("");
+            dom.severity.innerHTML = SEVERITY.map((s) => `<option>${s}</option>`).join("");
+
+            const thisYear = new Date().getFullYear();
+            let years = `<option value="">Selecciona el año</option>`;
+            for (let y = thisYear + 1; y >= CONFIG.oldestYear; y--) years += `<option>${y}</option>`;
+            dom.year.innerHTML = years;
+
+            dom.taxNote.textContent = CONFIG.pricesIncludeTax ? "IVA incluido" : "Más IVA";
+            state.folio = newFolio();
+            dom.folio.textContent = state.folio;
+        }
+
+        /* ------------------------------------------------------------------
+           6. SELECCIÓN DE SERVICIOS
+        ------------------------------------------------------------------ */
+        function paintCard(id, on) {
+            const card = dom.grid.querySelector(`[data-card="${id}"]`);
+            card.classList.toggle("border-brand-accent", on);
+            card.classList.toggle("bg-blue-500/10", on);
+            card.classList.toggle("border-slate-700", !on);
+            card.classList.toggle("bg-slate-900/50", !on);
+            card.querySelector(".svc-check").checked = on;
+            const opts = card.querySelector(".svc-options");
+            if (opts) opts.classList.toggle("hidden", !on);
+        }
+
+        function setOptionInputs(id, set) {
+            dom.grid.querySelectorAll(`.opt-input[data-svc="${id}"]`)
+                .forEach((input) => { input.checked = set.has(input.value); });
+        }
+
+        function toggleService(id, on) {
+            if (id === OTHER.id) {
+                state.other = on;
+                paintCard(id, on);
+                dom.otherPanel.classList.toggle("hidden", !on);
+                if (on) dom.otherDesc.focus();
+                else showError(dom.otherDesc, dom.otherDescError, "");
+                return;
+            }
+            if (on) {
+                // Se preselecciona la primera opción para que el precio aparezca de inmediato
+                const set = new Set([getService(id).options[0].id]);
+                state.selection.set(id, set);
+                setOptionInputs(id, set);
+            } else {
+                state.selection.delete(id);
+                setOptionInputs(id, new Set());
+            }
+            paintCard(id, on);
+        }
+
+        function changeOption(input) {
+            const id = input.dataset.svc;
+            const s = getService(id);
+            let set = state.selection.get(id) || new Set();
+
+            if (s.mode === "single") set = new Set([input.value]);
+            else input.checked ? set.add(input.value) : set.delete(input.value);
+
+            // Si se quitan todas las opciones de un servicio múltiple, se deselecciona
+            if (set.size === 0) return toggleService(id, false);
+            state.selection.set(id, set);
+        }
+
+        /* ------------------------------------------------------------------
+           7. CÁLCULO (lógica pura)
+        ------------------------------------------------------------------ */
+        function calculateQuote() {
+            const lines = SERVICES
+                .filter((s) => state.selection.has(s.id))
+                .map((s) => {
+                    const opts = s.options.filter((o) => state.selection.get(s.id).has(o.id));
+                    return {
+                        name: s.name,
+                        detail: opts.map((o) => o.label).join(" + "),
+                        amount: opts.reduce((sum, o) => sum + o.price, 0)
+                    };
+                });
+
+            const subtotal = lines.reduce((sum, l) => sum + l.amount, 0);
+            return { lines, subtotal, other: state.other };
+        }
+
+        /* ------------------------------------------------------------------
+           8. RENDER DEL RESUMEN
+        ------------------------------------------------------------------ */
+        function render() {
+            const q = calculateQuote();
+            const count = q.lines.length + (q.other ? 1 : 0);
+
+            if (!count) {
+                dom.summaryList.innerHTML = `<li class="py-6 text-center text-slate-500">Selecciona al menos un servicio</li>`;
+            } else {
+                dom.summaryList.innerHTML = q.lines.map((l) => `
+                    <li class="py-2.5 flex justify-between gap-3">
+                        <span><span class="block font-medium text-slate-200">${l.name}</span><span class="text-slate-400">${l.detail}</span></span>
+                        <span class="font-semibold whitespace-nowrap">${money.format(l.amount)}</span>
+                    </li>`).join("") + (q.other ? `
+                    <li class="py-2.5 flex justify-between gap-3">
+                        <span class="font-medium text-slate-200">${OTHER.name}</span>
+                        <span class="font-semibold text-amber-300 whitespace-nowrap">Por cotizar</span>
+                    </li>` : "");
+            }
+
+            dom.countBadge.textContent = `${count} ${count === 1 ? "servicio" : "servicios"}`;
+            // Si solo hay falla compleja, no tiene sentido mostrar $0.00
+            const totalText = q.other && q.subtotal === 0 ? "Por cotizar" : money.format(q.subtotal);
+            dom.sumTotal.textContent = totalText;
+            dom.barTotal.textContent = totalText + (q.other && q.subtotal > 0 ? " +" : "");
+            dom.pendingNote.classList.toggle("hidden", !(q.other && q.subtotal > 0));
+
+            if (count) showError(null, dom.servicesError, "");
+        }
+
+        /* ------------------------------------------------------------------
+           9. VALIDACIÓN
+        ------------------------------------------------------------------ */
+        function showError(input, el, msg) {
+            el.textContent = msg;
+            el.classList.toggle("hidden", !msg);
+            if (!input) return;
+            input.setAttribute("aria-invalid", msg ? "true" : "false");
+            input.classList.toggle("border-red-500", !!msg);
+            input.classList.toggle("border-slate-700", !msg);
+        }
+
+        const validators = {
+            name: () => {
+                const v = dom.name.value.trim().replace(/\s+/g, " ");
+                showError(dom.name, dom.nameError, v.length >= 2 ? "" : "Ingresa el nombre del cliente.");
+                return v.length >= 2 ? v : null;
+            },
+            phone: () => {
+                let v = dom.phone.value.replace(/\D/g, "");
+                if (v.length === 12 && v.startsWith("52")) v = v.slice(2); // Acepta lada de país
+                const ok = /^\d{10}$/.test(v);
+                showError(dom.phone, dom.phoneError, ok ? "" : "El teléfono debe tener 10 dígitos.");
+                return ok ? v : null;
+            },
+            model: () => {
+                const v = dom.model.value.trim();
+                showError(dom.model, dom.modelError, v.length >= 2 ? "" : "Indica la marca y el modelo.");
+                return v.length >= 2 ? v : null;
+            },
+            year: () => {
+                const v = dom.year.value;
+                showError(dom.year, dom.yearError, v ? "" : "Selecciona el año.");
+                return v || null;
+            },
+            otherDesc: () => {
+                if (!state.other) return "";
+                const v = dom.otherDesc.value.trim();
+                const ok = v.length >= 10;
+                showError(dom.otherDesc, dom.otherDescError, ok ? "" : "Describe la falla (mínimo 10 caracteres).");
+                return ok ? v : null;
+            }
+        };
+
+        function validateAll() {
+            const hasServices = state.selection.size > 0 || state.other;
+            showError(null, dom.servicesError, hasServices ? "" : "Selecciona al menos un servicio o describe tu falla.");
+
+            const r = {};
+            for (const key in validators) r[key] = validators[key]();
+
+            const firstInvalid = [dom.otherDesc, dom.name, dom.phone, dom.model, dom.year]
+                .find((el) => el.getAttribute("aria-invalid") === "true" && el.offsetParent !== null);
+
+            if (!hasServices) { dom.grid.scrollIntoView({ behavior: "smooth", block: "center" }); return null; }
+            if (firstInvalid) { firstInvalid.focus(); return null; }
+            return r;
+        }
+
+        /* ------------------------------------------------------------------
+           10. MENSAJE Y ENVÍO A WHATSAPP
+        ------------------------------------------------------------------ */
+        function buildMessage(q, c) {
+            const date = new Date().toLocaleString(CONFIG.locale, { dateStyle: "short", timeStyle: "short" });
+
+            const serviceLines = q.lines.map((l) => `• ${l.name} (${l.detail}): ${money.format(l.amount)}`);
+
+            const otherBlock = q.other ? [
+                ``,
+                `🧰 *Falla compleja (por cotizar):*`,
+                `• Falla: ${c.otherDesc}`,
+                `• Motor: ${dom.engineType.value}`,
+                `• Gravedad: ${dom.severity.value}`
+            ] : [];
+
+            const totalLine = q.subtotal > 0
+                ? `💰 *Total estimado:* ${money.format(q.subtotal)} MXN (${CONFIG.pricesIncludeTax ? "IVA incluido" : "más IVA"})`
+                : `💰 *Total estimado:* Sujeto a revisión`;
+
+            return [
+                `*COTIZACIÓN WEB - AUTOELIT*`,
+                `📋 *Folio:* ${state.folio} · ${date}`,
+                ``,
+                `👤 *Cliente:* ${c.name}`,
+                `📞 *Teléfono:* ${c.phone}`,
+                `🚗 *Vehículo:* ${c.model} ${c.year}`,
+                ``,
+                ...(q.lines.length ? [`📋 *Servicios solicitados:*`, ...serviceLines] : []),
+                ...otherBlock,
+                ``,
+                totalLine,
+                ...(q.other && q.subtotal > 0 ? [`➕ Falla compleja por cotizar`] : []),
+                ``,
+                `_El precio final está sujeto a revisión física del vehículo._`,
+                `_Enviado desde autoelit.com_`
+            ].join("\n");
+        }
+
+        function sendToWhatsApp(e) {
+            e.preventDefault();
+            const client = validateAll();
+            if (!client) return;
+
+            const message = buildMessage(calculateQuote(), client);
+            const url = `https://wa.me/${CONFIG.whatsappNumber}?text=${encodeURIComponent(message)}`;
+
+            // Si el navegador bloquea la ventana emergente, abrir en la misma pestaña
+            const win = window.open(url, "_blank");
+            if (win) win.opener = null;
+            else window.location.href = url;
+        }
+
+        /* ------------------------------------------------------------------
+           11. NUEVA COTIZACIÓN (siguiente cliente en mostrador)
+        ------------------------------------------------------------------ */
+        function resetAll() {
+            [...state.selection.keys()].forEach((id) => toggleService(id, false));
+            toggleService(OTHER.id, false);
+            dom.form.reset();
+            dom.otherDesc.value = "";
+            dom.engineType.selectedIndex = 0;
+            dom.severity.selectedIndex = 0;
+            [[dom.name, dom.nameError], [dom.phone, dom.phoneError], [dom.model, dom.modelError], [dom.year, dom.yearError]]
+                .forEach(([input, err]) => showError(input, err, ""));
+            showError(null, dom.servicesError, "");
+            state.folio = newFolio();
+            dom.folio.textContent = state.folio;
+            render();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+
+        /* ------------------------------------------------------------------
+           12. EVENTOS
+        ------------------------------------------------------------------ */
+        function bindEvents() {
+            dom.grid.addEventListener("change", (e) => {
+                const t = e.target;
+                if (t.classList.contains("svc-check")) toggleService(t.value, t.checked);
+                else if (t.classList.contains("opt-input")) changeOption(t);
+                else return;
+                render();
+            });
+
+            // Validación al salir del campo; en vivo solo si ya mostraba error
+            const fields = { name: dom.name, phone: dom.phone, model: dom.model, year: dom.year, otherDesc: dom.otherDesc };
+            for (const [key, el] of Object.entries(fields)) {
+                el.addEventListener("blur", () => { if (el.value) validators[key](); });
+                el.addEventListener(el.tagName === "SELECT" ? "change" : "input", () => {
+                    if (el.getAttribute("aria-invalid") === "true") validators[key]();
+                });
+            }
+
+            dom.form.addEventListener("submit", sendToWhatsApp);
+            dom.resetBtn.addEventListener("click", resetAll);
+        }
+
+        /* ------------------------------------------------------------------
+           13. ARRANQUE
+        ------------------------------------------------------------------ */
+        initControls();
+        bindEvents();
+        render();
+    </script>
+</body>
+</html>
+
+</body></html>
